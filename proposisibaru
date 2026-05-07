@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proposisi Makro & Mikro — Customer Journey Map</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #050505; color: #e5e5e5; overflow: hidden; }
+        h1, h2, h3, h4, .serif { font-family: 'EB Garamond', serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        ::selection { background: white; color: black; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        .slide {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.97) translateY(20px);
+        }
+        .slide.active {
+            opacity: 1; pointer-events: auto;
+            transform: scale(1) translateY(0);
+        }
+
+        .slide-inner {
+            width: 100%; max-width: 1100px; padding: 2rem 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .slide-inner { padding: 1.5rem 1.25rem; }
+        }
+
+        .grid-bg {
+            background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 75%);
+            mask-image: radial-gradient(circle at center, black 30%, transparent 75%);
+        }
+
+        .glow-line {
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(255,79,48,0.6), transparent);
+        }
+
+        .proposition-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .proposition-card:hover {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(255,79,48,0.2);
+        }
+
+        .tag {
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            padding: 0.25rem 0.75rem; border-radius: 9999px;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #a3a3a3;
+        }
+        .tag-orange { border-color: rgba(255,79,48,0.3); color: #FF4F30; }
+
+        .number-circle {
+            width: 32px; height: 32px; min-width: 32px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; font-size: 0.8rem; font-weight: 600;
+            background: rgba(255,79,48,0.1); color: #FF4F30;
+            border: 1px solid rgba(255,79,48,0.2);
+        }
+
+        .macro-num {
+            font-family: 'EB Garamond', serif;
+            font-size: 4rem; font-weight: 500; line-height: 1;
+            color: rgba(255,79,48,0.08); position: absolute; top: -0.5rem; left: 0.5rem;
+        }
+
+        .progress-bar {
+            position: fixed; top: 0; left: 0; height: 2px; z-index: 100;
+            background: linear-gradient(to right, #FF4F30, #c2410c);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);
+            color: #a3a3a3; cursor: pointer; transition: all 0.2s;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.06); color: white; border-color: rgba(255,255,255,0.2); }
+        .nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: all 0.3s; cursor: pointer; }
+        .dot.active { background: #FF4F30; box-shadow: 0 0 8px rgba(255,79,48,0.4); width: 24px; border-radius: 4px; }
+
+        .fade-in-item {
+            opacity: 0; transform: translateY(15px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .slide.active .fade-in-item {
+            opacity: 1; transform: translateY(0);
+        }
+        .slide.active .fade-in-item:nth-child(1) { transition-delay: 0.1s; }
+        .slide.active .fade-in-item:nth-child(2) { transition-delay: 0.2s; }
+        .slide.active .fade-in-item:nth-child(3) { transition-delay: 0.3s; }
+        .slide.active .fade-in-item:nth-child(4) { transition-delay: 0.4s; }
+        .slide.active .fade-in-item:nth-child(5) { transition-delay: 0.5s; }
+        .slide.active .fade-in-item:nth-child(6) { transition-delay: 0.6s; }
+        .slide.active .fade-in-item:nth-child(7) { transition-delay: 0.7s; }
+
+        .hero-glow {
+            position: absolute; width: 500px; height: 500px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,79,48,0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .icon-box {
+            width: 40px; height: 40px; min-width: 40px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px; background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .slide-counter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem; color: #525252;
+        }
+
+        .cpmk-card {
+            background: linear-gradient(135deg, rgba(255,79,48,0.06) 0%, rgba(255,255,255,0.02) 50%, rgba(255,79,48,0.03) 100%);
+            border: 1px solid rgba(255,79,48,0.15);
+            border-radius: 20px; padding: 2.5rem;
+            position: relative; overflow: hidden;
+        }
+        .cpmk-card::before {
+            content: ''; position: absolute; top: -1px; left: 20%; right: 20%; height: 1px;
+            background: linear-gradient(to right, transparent, rgba(255,79,48,0.4), transparent);
+        }
+
+        .cpmk-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1.25rem; border-radius: 12px;
+            background: rgba(255,79,48,0.1); border: 1px solid rgba(255,79,48,0.2);
+            font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+            color: #FF4F30; font-weight: 500;
+        }
+
+        .c3-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 48px; height: 48px; border-radius: 12px;
+            background: rgba(255,79,48,0.08); border: 1px solid rgba(255,79,48,0.15);
+            font-family: 'EB Garamond', serif; font-size: 1.4rem; font-weight: 600;
+            color: #FF4F30;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .float-anim { animation: float 6s ease-in-out infinite; }
+    </style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar" style="width: 0%"></div>
+
+<!-- Background Grid -->
+<div class="grid-bg fixed inset-0 pointer-events-none z-0"></div>
+
+<!-- Slide Container -->
+<div class="relative w-full h-screen z-10" id="slideContainer">
+
+    <!-- ============ SLIDE 0: COVER ============ -->
+    <div class="slide active" data-slide="0">
+        <div class="slide-inner text-center relative">
+            <div class="hero-glow" style="top: 50%; left: 50%; transform: translate(-50%,-50%);"></div>
+
+            <div class="fade-in-item mb-6">
+                <span class="tag tag-orange">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#FF4F30]"></span>
+                    Design Thinking
+                </span>
+            </div>
+
+            <h1 class="fade-in-item text-5xl md:text-7xl font-medium leading-[0.9] tracking-tight text-white mb-6">
+                Proposisi<br>
+                <span class="text-[#FF4F30]">Makro</span> & <span class="text-[#FF4F30]">Mikro</span>
+            </h1>
+
+            <div class="fade-in-item glow-line w-48 mx-auto mb-6"></div>
+
+            <p class="fade-in-item text-lg md:text-xl text-neutral-400 font-light max-w-xl mx-auto mb-8 leading-relaxed">
+                Customer Journey Map dan Analisis<br>Pengalaman Pengguna
+            </p>
+
+            <div class="fade-in-item flex items-center justify-center gap-4 text-sm text-neutral-500">
+                <span class="mono text-xs">Sub-CPMK 2</span>
+                <span class="w-1 h-1 rounded-full bg-neutral-600"></span>
+                <span class="mono text-xs">Pertemuan 5</span>
+            </div>
+
+            <div class="fade-in-item mt-12 text-neutral-600 text-sm flex items-center justify-center gap-2">
+                <i data-lucide="arrow-down" class="w-4 h-4 float-anim"></i>
+                <span class="mono text-xs">Tekan → untuk mulai</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SLIDE 1: SUB-CPMK 2 ============ -->
+    <div class="slide" data-slide="1">
+        <div class="slide-inner flex items-center justify-center">
+            <div class="w-full max-w-3xl">
+                <div class="fade-in-item mb-8">
+                    <span class="tag tag-orange">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#FF4F30]"></span>
+                        Capaian Pembelajaran
+                    </span>
+                </div>
+
+                <div class="fade-in-item cpmk-card">
+                    <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
+                        <div class="cpmk-badge flex-shrink-0">C3</div>
+                        <div class="flex-1">
+                            <div class="cpmk-badge mb-4 w-fit">
+                                <span>Sub-CPMK 2</span>
+                            </div>
+                            <p class="text-lg md:text-xl text-neutral-200 font-light leading-relaxed">
+                                Mahasiswa mampu <span class="text-white font-medium">mengumpulkan data pengguna</span> dan menyusunnya dalam bentuk <span class="text-[#FF4F30] font-medium">empathy map</span>, <span class="text-[#FF4F30] font-medium">user persona</span>, dan <span class="text-[#FF4F30] font-medium">customer journey</span>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-white/5 grid grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <div class="icon-box mx-auto mb-2"><i data-lucide="heart-handshake" class="w-5 h-5 text-[#FF4F30]"></i></div>
+                            <p class="text-xs text-neutral-400 font-light">Empathy Map</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="icon-box mx-auto mb-2"><i data-lucide="user-circle" class="w-5 h-5 text-[#FF4F30]"></i></div>
+                            <p class="text-xs text-neutral-400 font-light">User Persona</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="icon-box mx-auto mb-2"><i data-lucide="route" class="w-5 h-5 text-[#FF4F30]"></i></div>
+                            <p class="text-xs text-neutral-400 font-light">Customer Journey</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fade-in-item mt-6 flex items-center gap-2 text-neutral-600 text-xs">
+                    <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                    <span class="mono">C3 — Mengaplikasikan</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SLIDE 2: PROPOSISI MAKRO ============ -->
+    <div class="slide" data-slide="2">
+        <div class="slide-inner">
+            <div class="fade-in-item mb-2 flex items-center gap-3">
+                <span class="tag tag-orange">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#FF4F30]"></span>
+                    Makro
+                </span>
+                <span class="slide-counter">03 / 09</span>
+            </div>
+            <h2 class="fade-in-item text-3xl md:text-5xl font-medium tracking-tight text-white mb-3">Proposisi Makro</h2>
+            <p class="fade-in-item text-neutral-500 text-sm font-light mb-8">Struktur utama materi Customer Journey Map</p>
+            <div class="fade-in-item glow-line w-32 mb-10"></div>
+
+            <div class="space-y-4">
+                <div class="fade-in-item proposition-card flex items-start gap-4">
+                    <div class="number-circle">1</div>
+                    <p class="text-neutral-300 font-light leading-relaxed pt-1 text-[0.95rem]">
+                        Customer Journey Map digunakan untuk <span class="text-white font-medium">memetakan pengalaman pengguna</span> dalam berinteraksi dengan produk atau layanan digital.
+                    </p>
+                </div>
+                <div class="fade-in-item proposition-card flex items-start gap-4">
+                    <div class="number-circle">2</div>
+                    <p class="text-neutral-300 font-light leading-relaxed pt-1 text-[0.95rem]">
+                        Pengalaman pengguna terdiri atas <span class="text-white font-medium">tahapan aktivitas, touchpoint, emosi, kebutuhan,</span> dan <span class="text-white font-medium">pain point</span> pengguna.
+                    </p>
+                </div>
+                <div class="fade-in-item proposition-card flex items-start gap-4">
+                    <div class="number-circle">3</div>
+                    <p class="text-neutral-300 font-light leading-relaxed pt-1 text-[0.95rem]">
+                        Customer Journey Map membantu <span class="text-[#FF4F30] font-medium">mengidentifikasi peluang perbaikan</span> pengalaman pengguna pada produk digital.
+                    </p>
+                </div>
+                <div class="fade-in-item proposition-card flex items-start gap-4">
+                    <div class="number-circle">4</div>
+                    <p class="text-neutral-300 font-light leading-relaxed pt-1 text-[0.95rem]">
+                        Penyusunan Customer Journey Map dilakukan berdasarkan <span class="text-white font-medium">data hasil user research</span> dan <span class="text-white font-medium">user persona</span>.
+                    </p>
+                </div>
+                <div class="fade-in-item proposition-card flex items-start gap-4">
+                    <div class="number-circle">5</div>
+                    <p class="text-neutral-300 font-light leading-relaxed pt-1 text-[0.95rem]">
+                        Customer Journey Map menjadi <span class="text-white font-medium">dasar pengembangan solusi digital</span> berbasis <span class="text-[#FF4F30] font-medium">human-centered design</span>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SLIDE 3: MIKRO 1 ============ -->
+    <div class="slide" data-slide="3">
+        <div class="slide-inner">
+            <div class="fade-in-item mb-2 flex items-center gap-3">
+                <span class="tag">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                    Mikro 1
+                </span>
+                <span class="slide-counter">04 / 09</span>
+            </div>
+            <h2 class="fade-in-item text-3xl md:text-5xl font-medium tracking-tight text-white mb-2">Proposisi Mikro 1</h2>
+            <p class="fade-in-item text-neutral-500 text-sm font-light mb-8">Memahami perjalanan pengguna secara visual</p>
+            <div class="fade-in-item glow-line w-32 mb-10"></div>
+
+            <div class="grid md:grid-cols-3 gap-5">
+                <div class="fade-in-item proposition-card text-center">
+                    <div class="icon-box mx-auto mb-4"><i data-lucide="route" class="w-5 h-5 text-[#FF4F30]"></i></div>
+                    <p class="mono text-xs text-neutral-500 mb-2">1.1</p>
+                    <p class="text-neutral-300 font-light leading-relaxed text-[0.9rem]">
+                        Customer Journey Map <span class="text-white font-medium">menggambarkan perjalanan pengguna</span> dari awal hingga akhir penggunaan layanan.
+                    </p>
+                </div>
+                <div class="fade-in-item proposition-card text-center">
+                    <div class="icon-box mx-auto mb-4"><i data-lucide="eye" class="w-5 h-5 text-[#FF4F30]"></i></div>
+                    <p class="mono text-xs text-neutral-500 mb-2">1.2</p>
+                    <p class="text-neutral-300 font-light leading-relaxed text-[0.9rem]">
+                        Membantu <span class="text-white font-medium">memahami perilaku dan pengalaman</span> pengguna secara visual.
+                    </p>
+                </div>
+                <div class="fade-in-item proposition-card text-center">
+                    <div class="icon-box mx-auto mb-4"><i data-lucide="lightbulb" class="w-5 h-5 text-[#FF4F30]"></i></div>
+                    <p class="mono text-xs text-neutral-500 mb-2">1.3</p>
+                    <p class="text-neutral-300 font-light leading-relaxed text-[0.9rem]">
+                        Digunakan dalam proses <span class="text-[#FF4F30] font-medium">Design Thinking</span> berbasis human-centered design.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SLIDE 4: MIKRO 2 ============ -->
+    <div class="slide" data-slide="4">
+        <div class="slide-inner">
+            <div class="fade-in-item mb-2 flex items-center gap-3">
+                <span class="tag">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                    Mikro 2
+                </span>
+                <span class="slide-counter">05 / 09</span>
+            </div>
+            <h2 class="fade-in-item text-3xl md:text-5xl font-medium tracking-tight text-white mb-2">Proposisi Mikro 2</h2>
+            <p class="fade-in-item text-neutral-500 text-sm font-light mb-8">Komponen utama pengalaman pengguna</p>
+            <div class="fade-in-item glow-line w-32 mb-10"></div>
+
+            <div class="space-y-3">
+                <div class="fade-in-item proposition-card flex items-center gap-4">
+                    <div class="icon-box"><i data-lucide="mouse-pointer-click" class="w-4 h-4 text-[#FF4F30]"></i></div>
+                    <div class="flex-1">
+                        <span class="mono text-xs text-neutral-600 mr-3">2.1</span>
+                        <span class="text-neutral-300 font-light text-[0.9rem]"><span class="text-white font-medium">Aktivitas pengguna</span> menggambarkan tindakan pengguna pada setiap tahap perjalanan.</span>
+                    </div>
+                </div>
+                <div class="fade-in-item proposition-card flex items-center gap-4">
+                    <div class="icon-box"><i data-lucide="touchpad" class="w-4 h-4 text-[#FF4F30]"></i></div>
+                    <div class="flex-1">
+                        <span class="mono text-xs text-neutral-600 mr-3">2.2</span>
+                        <span class="text-neutral-300 font-light text-[0.9rem]"><span class="text-white font-medium">Touchpoint</span> menunjukkan titik interaksi antara pengguna dan sistem digital.</span>
+                    </div>
+                </div>
+                <div class="fade-in-item proposition-card flex items-center gap-4">
+                    <div class="icon-box"><i data-lucide="heart-pulse" class="w-4 h-4 text-[#FF4F30]"></i></div>
+                    <div class="flex-1">
+                        <span class="mono text-xs text-neutral-600 mr-3">2.3</span>
+                        <span class="text-neutral-300 font-light text-[0.9rem]"><span class="text-white font-medium">Emosi pengguna</span> menggambarkan perasaan pengguna selama menggunakan layanan.</span>
+                    </div>
+                </div>
+                <div class="fade-in-item proposition-card flex items-center gap-4">
+                    <div class="icon-box"><i data-lucide="alert-triangle" class="w-4 h-4 text-[#FF4F30]"></i></div>
+                    <div class="flex-1">
+                        <span class="mono text-xs text-neutral-600 mr-3">2.4</span>
+                        <span class="text-neutral-300 font-light text-[0.9rem]"><span class="text-[#FF4F30] font-medium">Pain point</span> menunjukkan hambatan atau masalah yang dialami pengguna.</span>
+                    </div>
+                </div>
+                <div class="fade-in-item proposition-card flex items-center gap-4">
+                    <div class="icon-box"><i data-lucide="target" class="w-4 h-4 text-[#FF4F30]"></i></div>
+                    <div class="flex-1">
+                        <span class="mono text-xs text-neutral-600 mr-3">2.5</span>
+                        <span class="text-neutral-300 font-light text-[0.9rem]"><span class="text-white font-medium">Kebutuhan pengguna</span> menjadi dasar perbaikan layanan digital.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SLIDE 5: MIKRO 3 ============ -->
+    <div class="slide" data-slide="5">
+        <div class="slide-inner">
+            <div class="fade-in-item mb-2 flex items-center gap-3">
+                <span class="tag">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                    Mikro 3
+                </span>
+                <span class="slide-counter">06 / 09</span>
+            </div>
+            <h2 class="fade-in-item text-3xl md:text-5xl font-medium tracking-tight text-white mb-2">Proposisi Mikro 3</h2>
+            <p class="fade-in-item text-neutral-500 text-sm font-light mb-8">Analisis & peluang inovasi</p>
+            <div class="fade-in-item glow-line w-32 mb-10"></div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="fade-in-item proposition-card relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-[#FF4F30]/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700"></div>
+                    <div class="relative z-10">
+                        <div class="icon-box mb-5"><i data-lucide="search" class="w-5 h-5 text-[#FF4F30]"></i></div>
+                        <p class="mono text-xs text-neutral-500 mb-3">3.1</p>
+                        <p class="text-neutral-300 font-light leading-relaxed text-[0.9rem]">
+                            Analisis customer journey membantu <span class="text-white font-medium">menemukan masalah utama</span> pengguna.
+                        </p>
+                    </div>
+                </div>
+                <div class="fade-in-item proposition-card relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-[#FF4F30]/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700"></div>
+                    <div class="relative z-10">
+                        <div class="icon-box mb-5"><i data-lucide="list-ordered" class="w-5 h-5 text-[#FF4F30]"></i></div>
+                        <p class="mono text-xs text-neutral-500 mb-3">3.2</p>
+                        <p class="text-neutral-300 font-light leading-relaxed text-[0.9rem]">
+                            Pain point pengguna dapat digunakan untuk <span class="text-[#FF4F30] font-medium">menentukan prioritas perbaikan</span> layanan.
+                        </p>
+                    </div>
+                </div>
+                <div class="fade-in-item proposition-card relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-[#FF4F30]/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700"></div>
+                    <div class="relative z-10">
+                        <div class="icon-box mb-5"><i data-lucide="sparkles" class="w-5 h-5 text-[#FF4F30]"></i></div>
+                        <p class="mono text-xs text-neutral-500 mb-3">3.3</p>
+                        <p class="text-neutral-300 font-light leading-relaxed text-[0.9rem]">
+                            <span class="text-white font-medium">Peluang inovasi</span> dapat diidentifikasi dari pengalaman pengguna.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SLIDE 6: MIKRO 4 ============ -->
+    <div class="slide" data-slide="6">
+        <div class="slide-inner">
+            <div class="fade-in-item mb-2 flex items-center gap-3">
+                <span class="tag">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                    Mikro 4
+                </span>
+                <span class="slide-counter">07 / 09</span>
+            </div>
+            <h2 class="fade-in-item text-3xl md:text-5xl font-medium tracking-tight text-white mb-2">Proposisi Mikro 4</h2>
+            <p class="fade-in-item text-neutral-500 text-sm font-light mb-8">Data & konteks pengguna</p>
+            <div class="fade-in-item glow-line w-32 mb-10"></div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="fade-in-item proposition-card flex flex-col">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="icon-box"><i data-lucide="mic" class="w-5 h-5 text-[#FF4F30]"></i></div>
+                        <span class="mono text-xs text-neutral-500">4.1</span>
+                    </div>
+                    <p class="text-neutral-300 font-light leading-relaxed text-[0.9rem]">
+                        Data <span class="text-white font-medium">wawancara dan observasi</span> pengguna digunakan sebagai dasar penyusunan customer journey.
+                    </p>
+                    <div class="mt-auto pt-4">
+                        <div class="flex items-center gap-2 text-xs text-neutral-600">
+                            <i data-lucide="file-text" class="w-3 h-3"></i>
+                            <span>Qualitative Data</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="fade-in-item proposition-card flex flex-col">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="icon-box"><i data-lucide="user-circle" class="w-5 h-5 text-[#FF4F30]"></i></div>
+                        <span class="mono text-xs text-neutral-500">4.2</span>
+                    </div>
+                    <p class="text-neutral-300 font-light leading-relaxed text-[0.9rem]">
+                        <span class="text-white font-medium">User persona</span> membantu menggambarkan karakteristik target pengguna.
+                    </p>
+                    <div class="mt-auto pt-4">
+                        <div class="flex items-center gap-2 text-xs text-neutral-600">
+                            <i data-lucide="users" class="w-3 h-3"></i>
+                            <span>User Representation</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="fade-in-item proposition-card flex flex-col">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="icon-box"><i data-lucide="compass" class="w-5 h-5 text-[#FF4F30]"></i></div>
+                        <span class="mono text-xs text-neutral-500">4.3</span>
+                    </div>
+                    <p class="text-neutral-300 font-light leading-relaxed text-[0.9rem]">
+                        Customer journey harus <span class="text-[#FF4F30] font-medium">sesuai dengan konteks</span> dan kebutuhan pengguna.
+                    </p>
+                    <div class="mt-auto pt-4">
+                        <div class="flex items-center gap-2 text-xs text-neutral-600">
+                            <i data-lucide="check-circle" class="w-3 h-3"></i>
+                            <span>Contextual Fit</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SLIDE 7: MIKRO 5 ============ -->
+    <div class="slide" data-slide="7">
+        <div class="slide-inner">
+            <div class="fade-in-item mb-2 flex items-center gap-3">
+                <span class="tag">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                    Mikro 5
+                </span>
+                <span class="slide-counter">08 / 09</span>
+            </div>
+            <h2 class="fade-in-item text-3xl md:text-5xl font-medium tracking-tight text-white mb-2">Proposisi Mikro 5</h2>
+            <p class="fade-in-item text-neutral-500 text-sm font-light mb-8">Dari analisis ke solusi</p>
+            <div class="fade-in-item glow-line w-32 mb-10"></div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="fade-in-item proposition-card text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-[#FF4F30]/5 border border-[#FF4F30]/10 flex items-center justify-center mx-auto mb-5">
+                        <i data-lucide="pencil-ruler" class="w-7 h-7 text-[#FF4F30]"></i>
+                    </div>
+                    <p class="mono text-xs text-neutral-500 mb-3">5.1</p>
+                    <p class="text-neutral-300 font-light leading-relaxed text-[0.9rem]">
+                        Membantu <span class="text-white font-medium">merancang solusi</span> yang relevan dengan kebutuhan pengguna.
+                    </p>
+                </div>
+                <div class="fade-in-item proposition-card text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-[#FF4F30]/5 border border-[#FF4F30]/10 flex items-center justify-center mx-auto mb-5">
+                        <i data-lucide="layers" class="w-7 h-7 text-[#FF4F30]"></i>
+                    </div>
+                    <p class="mono text-xs text-neutral-500 mb-3">5.2</p>
+                    <p class="text-neutral-300 font-light leading-relaxed text-[0.9rem]">
+                        Analisis pengalaman pengguna mendukung pengembangan <span class="text-[#FF4F30] font-medium">user experience</span> yang lebih baik.
+                    </p>
+                </div>
+                <div class="fade-in-item proposition-card text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-[#FF4F30]/5 border border-[#FF4F30]/10 flex items-center justify-center mx-auto mb-5">
+                        <i data-lucide="box" class="w-7 h-7 text-[#FF4F30]"></i>
+                    </div>
+                    <p class="mono text-xs text-neutral-500 mb-3">5.3</p>
+                    <p class="text-neutral-300 font-light leading-relaxed text-[0.9rem]">
+                        Hasil customer journey dapat digunakan sebagai <span class="text-white font-medium">dasar pengembangan prototype</span> digital.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SLIDE 8: VISUAL SUMMARY ============ -->
+    <div class="slide" data-slide="8">
+        <div class="slide-inner">
+            <div class="fade-in-item mb-2 flex items-center gap-3">
+                <span class="tag tag-orange">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#FF4F30]"></span>
+                    Overview
+                </span>
+                <span class="slide-counter">09 / 09</span>
+            </div>
+            <h2 class="fade-in-item text-3xl md:text-5xl font-medium tracking-tight text-white mb-3">Struktur Proposisi</h2>
+            <p class="fade-in-item text-neutral-500 text-sm font-light mb-8">Hierarki dari makro ke mikro</p>
+            <div class="fade-in-item glow-line w-32 mb-10"></div>
+
+            <div class="fade-in-item">
+                <div class="flex flex-col items-center gap-3">
+                    <!-- Makro -->
+                    <div class="w-full max-w-2xl rounded-2xl border border-[#FF4F30]/20 bg-gradient-to-r from-[#FF4F30]/5 to-transparent p-5 text-center">
+                        <span class="mono text-xs text-[#FF4F30] mb-1 block">MAKRO</span>
+                        <p class="text-white font-medium text-sm">Customer Journey Map — Struktur Utama</p>
+                    </div>
+
+                    <!-- Connector -->
+                    <div class="flex flex-col items-center gap-0">
+                        <div class="w-px h-6 bg-gradient-to-b from-[#FF4F30]/30 to-transparent"></div>
+                        <div class="w-px h-6 bg-transparent"></div>
+                    </div>
+
+                    <!-- Micro Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 w-full max-w-4xl">
+                        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-center">
+                            <span class="mono text-[0.65rem] text-neutral-600 block mb-2">MIKRO 1</span>
+                            <p class="text-xs text-neutral-400 font-light">Perjalanan Visual</p>
+                        </div>
+                        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-center">
+                            <span class="mono text-[0.65rem] text-neutral-600 block mb-2">MIKRO 2</span>
+                            <p class="text-xs text-neutral-400 font-light">Komponen UX</p>
+                        </div>
+                        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-center">
+                            <span class="mono text-[0.65rem] text-neutral-600 block mb-2">MIKRO 3</span>
+                            <p class="text-xs text-neutral-400 font-light">Analisis & Inovasi</p>
+                        </div>
+                        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-center">
+                            <span class="mono text-[0.65rem] text-neutral-600 block mb-2">MIKRO 4</span>
+                            <p class="text-xs text-neutral-400 font-light">Data & Konteks</p>
+                        </div>
+                        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-center col-span-2 md:col-span-1">
+                            <span class="mono text-[0.65rem] text-neutral-600 block mb-2">MIKRO 5</span>
+                            <p class="text-xs text-neutral-400 font-light">Solusi & Proto</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Navigation Controls -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-5 py-3 rounded-full border border-white/10 bg-[#0A0A0A]/90 backdrop-blur-xl">
+    <button class="nav-btn" id="prevBtn" disabled onclick="changeSlide(-1)">
+        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+    </button>
+    <div class="flex items-center gap-2" id="dotsContainer"></div>
+    <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">
+        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+    </button>
+</div>
+
+<!-- Slide counter bottom-right -->
+<div class="fixed bottom-7 right-6 z-50 slide-counter hidden md:block" id="slideCounterGlobal">1 / 9</div>
+
+<!-- Keyboard hint -->
+<div class="fixed top-5 right-6 z-50 slide-counter hidden md:flex items-center gap-2 opacity-40">
+    <i data-lucide="keyboard" class="w-3.5 h-3.5"></i>
+    <span>← → navigasi</span>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+
+    const dotsContainer = document.getElementById('dotsContainer');
+    for (let i = 0; i < totalSlides; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === 0 ? ' active' : '');
+        dot.onclick = () => goToSlide(i);
+        dotsContainer.appendChild(dot);
+    }
+
+    function goToSlide(index) {
+        if (index < 0 || index >= totalSlides || index === currentSlide) return;
+
+        slides[currentSlide].classList.remove('active');
+        dotsContainer.children[currentSlide].classList.remove('active');
+
+        currentSlide = index;
+
+        slides[currentSlide].classList.add('active');
+        dotsContainer.children[currentSlide].classList.add('active');
+
+        document.getElementById('prevBtn').disabled = currentSlide === 0;
+        document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+
+        const progress = ((currentSlide) / (totalSlides - 1)) * 100;
+        document.getElementById('progressBar').style.width = progress + '%';
+
+        document.getElementById('slideCounterGlobal').textContent = `${currentSlide + 1} / ${totalSlides}`;
+    }
+
+    function changeSlide(dir) {
+        goToSlide(currentSlide + dir);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+            e.preventDefault();
+            changeSlide(1);
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            changeSlide(-1);
+        } else if (e.key === 'Home') {
+            e.preventDefault();
+            goToSlide(0);
+        } else if (e.key === 'End') {
+            e.preventDefault();
+            goToSlide(totalSlides - 1);
+        }
+    });
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    document.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].screenX - touchStartX;
+        const dy = e.changedTouches[0].screenY - touchStartY;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+            if (dx < 0) changeSlide(1);
+            else changeSlide(-1);
+        }
+    }, { passive: true });
+
+    document.getElementById('slideCounterGlobal').textContent = `1 / ${totalSlides}`;
+</script>
+
+</body>
+</html>
